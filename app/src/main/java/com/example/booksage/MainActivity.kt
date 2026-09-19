@@ -1,23 +1,25 @@
 package com.example.booksage
 
-import android.annotation.SuppressLint
+import android.content.Intent
+import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.Bundle
-import android.view.View
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -28,20 +30,19 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.fragment.app.FragmentActivity
-import androidx.fragment.app.FragmentContainerView
-import androidx.pdf.viewer.fragment.PdfViewerFragment
+import com.example.booksage.HomeScreen.BookViewModel
+import com.example.booksage.ui.PdfFragmentHost
 import com.example.booksage.ui.theme.BookSageTheme
 
 class MainActivity : FragmentActivity() {
+    private val bookViewModel: BookViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             BookSageTheme {
-
-                PdfScreen()
+                PdfScreen(bookViewModel)
             }
         }
     }
@@ -49,56 +50,37 @@ class MainActivity : FragmentActivity() {
 
 
 @Composable
-fun PdfScreen() {
+fun PdfScreen(viewModel : BookViewModel) {
+    val context = LocalContext.current
 
-    var result by remember { mutableStateOf<Uri?>(null) }
     val launcher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri: Uri? ->
-        result = uri
+        uri ?: return@rememberLauncherForActivityResult
+        context.contentResolver.takePersistableUriPermission(
+            uri, Intent.FLAG_GRANT_READ_URI_PERMISSION
+        )
+        viewModel.addPdf(uri)
     }
-
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(10.dp),
-        Arrangement.Center,
-        Alignment.CenterHorizontally
-    ) {
-        Button(
-            onClick = { launcher.launch(arrayOf("application/pdf")) },
-            colors = ButtonDefaults.buttonColors(Color.Blue)
-        ) {
-            Text("Pick Pdf", color = Color.White)
+    Scaffold(
+        floatingActionButton = {
+            FloatingActionButton(onClick = { launcher.launch(arrayOf("application/pdf")) }) {
+                Text("+")
+            }
         }
-        result?.let { uri -> PdfFragmentHost(uri) }
-
+    ) { padding ->
+        if (viewModel.selectedUri == null) {
+            PdfGrid(
+                uris = viewModel.pdfUris,
+                onPdfClick = { viewModel.selectPdf(it) }
+            )
+        } else {
+            Column(Modifier.padding(padding)) {
+                TextButton(onClick = { viewModel.clearPdf()}) {
+                    Text("← Back to grid")
+                }
+                PdfFragmentHost(uri = viewModel.selectedUri!!)
+            }
+        }
     }
-
-}
-
-@SuppressLint("ContextCastToActivity")
-@Composable
-fun PdfFragmentHost(uri: Uri) {
-
-    val activity = LocalContext.current as FragmentActivity
-
-    AndroidView(
-        modifier = Modifier.fillMaxSize(),
-        factory = { context ->
-            FragmentContainerView(context).apply {
-                id = View.generateViewId()
-            }
-        },
-        update = { container ->
-            val fragment = PdfViewerFragment().apply {
-                documentUri = uri
-            }
-            activity.supportFragmentManager
-                .beginTransaction()
-                .replace(container.id, fragment)
-                .commitNow()
-        }
-    )
-
 }
