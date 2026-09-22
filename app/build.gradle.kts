@@ -58,9 +58,9 @@ dependencies {
     implementation("com.google.android.material:material:1.13.0")
 
 
-    implementation("androidx.room:room-runtime:2.6.1")
-    implementation("androidx.room:room-ktx:2.6.1") // Coroutine & Flow support
-    ksp("androidx.room:room-compiler:2.6.1")       // KSP Code generator
+    implementation("androidx.room:room-runtime:2.8.4")
+    implementation("androidx.room:room-ktx:2.8.4") // Coroutine & Flow support
+    ksp("androidx.room:room-compiler:2.8.4")       // KSP Code generator
 
     // --- ViewModel for Jetpack Compose ---
 

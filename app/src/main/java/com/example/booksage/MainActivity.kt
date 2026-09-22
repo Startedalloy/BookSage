@@ -31,17 +31,23 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.fragment.app.FragmentActivity
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.booksage.HomeScreen.BookViewModel
+import com.example.booksage.roomDB.BookApp
+import com.example.booksage.roomDB.BookViewModelFactory
 import com.example.booksage.ui.PdfFragmentHost
 import com.example.booksage.ui.theme.BookSageTheme
 
 class MainActivity : FragmentActivity() {
-    private val bookViewModel: BookViewModel by viewModels()
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             BookSageTheme {
+                val app = LocalContext.current.applicationContext as BookApp
+                val bookViewModel: BookViewModel = viewModel(
+                    factory = BookViewModelFactory(app.database.dao()),)
                 PdfScreen(bookViewModel)
             }
         }
@@ -50,7 +56,7 @@ class MainActivity : FragmentActivity() {
 
 
 @Composable
-fun PdfScreen(viewModel : BookViewModel) {
+fun PdfScreen(viewModel: BookViewModel) {
     val context = LocalContext.current
 
     val launcher = rememberLauncherForActivityResult(
@@ -67,16 +73,13 @@ fun PdfScreen(viewModel : BookViewModel) {
             FloatingActionButton(onClick = { launcher.launch(arrayOf("application/pdf")) }) {
                 Text("+")
             }
-        }
-    ) { padding ->
+        }) { padding ->
         if (viewModel.selectedUri == null) {
             PdfGrid(
-                uris = viewModel.pdfUris,
-                onPdfClick = { viewModel.selectPdf(it) }
-            )
+                uris = viewModel.pdfUris, onPdfClick = { viewModel.selectPdf(it) })
         } else {
             Column(Modifier.padding(padding)) {
-                TextButton(onClick = { viewModel.clearPdf()}) {
+                TextButton(onClick = { viewModel.clearPdf() }) {
                     Text("← Back to grid")
                 }
                 PdfFragmentHost(uri = viewModel.selectedUri!!)
