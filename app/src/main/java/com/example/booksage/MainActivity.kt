@@ -47,7 +47,7 @@ class MainActivity : FragmentActivity() {
             BookSageTheme {
                 val app = LocalContext.current.applicationContext as BookApp
                 val bookViewModel: BookViewModel = viewModel(
-                    factory = BookViewModelFactory(app.database.dao()),)
+                    factory = BookViewModelFactory(app.repository),)
                 PdfScreen(bookViewModel)
             }
         }

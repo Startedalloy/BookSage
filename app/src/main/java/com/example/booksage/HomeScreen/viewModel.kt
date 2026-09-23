@@ -7,11 +7,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.booksage.roomDB.Pdf
-import com.example.booksage.roomDB.PdfDao
+import com.example.booksage.roomDB.PdfRepository
 import kotlinx.coroutines.launch
 
-class BookViewModel(private val dao: PdfDao) : ViewModel() {
+class BookViewModel(private val repository: PdfRepository) : ViewModel() {
 
     var pdfUris by mutableStateOf<List<Uri>>(emptyList())
         private set
@@ -20,15 +19,14 @@ class BookViewModel(private val dao: PdfDao) : ViewModel() {
 
     init {
         viewModelScope.launch {
-            dao.getPdfs().collect { pdfList ->
-
+            repository.pdfs.collect {pdfList->
                 pdfUris = pdfList.map { it.uri }
             }
         }
     }
 
     fun addPdf(uri: Uri) {
-        viewModelScope.launch { dao.addUri(Pdf(uri = uri)) }
+        viewModelScope.launch { repository.addPdf(uri) }
     }
 
     fun selectPdf(uri: Uri) {

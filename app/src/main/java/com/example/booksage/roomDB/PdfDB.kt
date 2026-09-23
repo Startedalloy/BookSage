@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 
 @Database(
-    entities = [Pdf::class], version = 1
+    entities = [Pdf::class], version = 2
 )
 @TypeConverters(Converters::class)
 abstract class PdfDB : RoomDatabase() {
@@ -17,7 +17,12 @@ abstract class PdfDB : RoomDatabase() {
 class BookApp : Application() {
 
     val database: PdfDB by lazy {
-        Room.databaseBuilder(applicationContext, PdfDB::class.java, "pdf_database").build()
+        Room.databaseBuilder(applicationContext, PdfDB::class.java, "pdf_database")
+            .fallbackToDestructiveMigration(true).build()
 
+    }
+
+    val repository: PdfRepository by lazy {
+        PdfRepository(database.dao())
     }
 }

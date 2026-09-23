@@ -1,6 +1,5 @@
 package com.example.booksage.roomDB
 
-import android.net.Uri
 import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
